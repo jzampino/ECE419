@@ -1,17 +1,16 @@
 import java.net.*;
 import java.io.*;
-import java.util.HashMap;
+import java.util.*;
 
-public class MazeServerHandler extends Thread {
+public class MazeServerRequestHandler extends Thread {
 	
 	private Socket socket = null;
 	private int pCount = 0;
-	private static HashMap<Integer, String> playerList = new HashMap<Integer, String>();
+	public static HashMap<Integer, String> playerList = new HashMap<Integer, String>();
 
-	public MazeServerHandler(Socket socket) {
-		super("MazeServerHandler");
-		this.socket = null;
-		System.out.println("Maze Server up and running");
+	public MazeServerRequestHandler(Socket socket) {
+		super("MazeServerRequestHandler");
+		this.socket = socket;
 	}
 
 	public void run() {
@@ -20,8 +19,6 @@ public class MazeServerHandler extends Thread {
 		try {
 			ObjectInputStream fromPlayer = new ObjectInputStream(socket.getInputStream());
 			PlayerPacket pPacket;
-
-			ObjectOutputStream toPlayer = new ObjectOutputStream(socket.getOutputStream());
 
 			System.out.println("Waiting for players...");
 
@@ -43,22 +40,26 @@ public class MazeServerHandler extends Thread {
 					cPacket = pPacket;
 					cPacket.type = PlayerPacket.PLAYER_REGISTER_REPLY;
 					cPacket.uID = pCount;
+
+					System.out.println("Registered user: " + pPacket.playerName + ", from: " + pPacket.hostName);
+
+					// Add request to FIFO, should cause handler thread to wake up
+
+					MazeServerProcessor.requestLog.put(cPacket);
+
+					break;
 				}
-
-				System.out.println("Registered user: " + pPacket.playerName + ", from: " + pPacket.hostName);
-
-				toPlayer.writeObject(cPacket);
-
-				continue;
 			}
 
 			fromPlayer.close();
-			toPlayer.close();
 			socket.close();
 		} catch (IOException e) {
 			if(!gotQuit)
 				e.printStackTrace();
 		} catch (ClassNotFoundException e) {
+			if(!gotQuit)
+				e.printStackTrace();
+		} catch (InterruptedException e) {
 			if(!gotQuit)
 				e.printStackTrace();
 		}

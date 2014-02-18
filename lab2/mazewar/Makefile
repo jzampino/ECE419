@@ -5,7 +5,7 @@
 # The jikes is *way* faster if you have it.
 #JAVAC=${JIKES}
 # Otherwise use Sun's compiler.
-JAVA_HOME=/cad2/ece419s/java/jdk1.6.0/
+JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk.x86_64
 JAVAC=${JAVA_HOME}/bin/javac -source 1.6
 JAVADOC=${JAVA_HOME}/bin/javadoc -use -source 1.6 -author -version -link http://java.sun.com/j2se/1.6.0/docs/api/ 
 MKDIR=mkdir
@@ -14,7 +14,7 @@ CAT=cat
 
 # The only file we are interested in is Mazewar.class,
 # the rest are handled by the dependencies.
-FILES=Mazewar.class MazeServer.class
+FILES=Mazewar.class MazeServer.class MazeServerRequestHandler.class MazeServerProcessor.class
 
 all: ${FILES}
 
@@ -37,7 +37,7 @@ clean:
 	${RM} *.class *~ docs/*
 
 # Classfile dependencies
-include Makefile.dep
+#include Makefile.dep
 
 # docs isn't a real target
 .PHONY : docs
