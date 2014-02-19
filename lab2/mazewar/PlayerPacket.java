@@ -15,5 +15,6 @@ public class PlayerPacket implements Serializable {
 	public String playerName;
 	public int uID;
 	public int type;
+	public int listenPort;
 
 }

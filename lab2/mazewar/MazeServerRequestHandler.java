@@ -1,12 +1,13 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 public class MazeServerRequestHandler extends Thread {
 	
 	private Socket socket = null;
 	private int pCount = 0;
-	public static HashMap<Integer, String> playerList = new HashMap<Integer, String>();
+	public static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
 
 	public MazeServerRequestHandler(Socket socket) {
 		super("MazeServerRequestHandler");
@@ -25,17 +26,22 @@ public class MazeServerRequestHandler extends Thread {
 			while( (pPacket = (PlayerPacket) fromPlayer.readObject()) != null) {
 
 				PlayerPacket cPacket = new PlayerPacket();
-				String playerKey = pPacket.playerName + "." + pPacket.hostName;
+				PlayerInfo pInfo = new PlayerInfo();
 
 				if(pPacket.type == PlayerPacket.PLAYER_REGISTER) {
-					if(pPacket.uID == -1)
+					if(pPacket.uID == -1) {
 						pCount++;
+						pInfo.hostName = pPacket.hostName;
+						pInfo.playerName = pPacket.playerName;
+						pInfo.uID = pCount;
+						pInfo.listenPort = pPacket.listenPort;
+					}
 					else {
 						System.err.println("ERROR: Duplicate Register Request! User with pID " + pPacket.uID + " already registered!");
 						System.exit(-1);
 					}
 						
-					playerList.put(pCount, playerKey);
+					playerList.put(pCount, pInfo);
 
 					cPacket = pPacket;
 					cPacket.type = PlayerPacket.PLAYER_REGISTER_REPLY;

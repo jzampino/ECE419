@@ -27,6 +27,8 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import javax.swing.BorderFactory;
 import java.io.Serializable;
+import java.net.*;
+import java.io.*;
 
 /**
  * The entry point and glue code for the game.  It also contains some helpful
@@ -36,6 +38,11 @@ import java.io.Serializable;
  */
 
 public class Mazewar extends JFrame {
+
+		/**
+		 * Unique ID for this player in the system
+		 */
+		public final int uID;
 
         /**
          * The default width of the {@link Maze}.
@@ -119,7 +126,7 @@ public class Mazewar extends JFrame {
         /** 
          * The place where all the pieces are put together. 
          */
-        public Mazewar() {
+        public Mazewar(int serverPort, String serverName, int listenPort) {
                 super("ECE419 Mazewar");
                 consolePrintLn("ECE419 Mazewar started!");
                 
@@ -141,7 +148,65 @@ public class Mazewar extends JFrame {
                 
                 // You may want to put your network initialization code somewhere in
                 // here.
-                
+
+				int tempID = -1;
+				
+				try {
+
+					Socket sendSocket = new Socket(serverName, serverPort);
+					ServerSocket listenSocket = new ServerSocket(listenPort);
+
+					PlayerPacket cRequest = new PlayerPacket();
+					PlayerPacket cResponse;
+
+					cRequest.type = PlayerPacket.PLAYER_REGISTER;
+					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
+					cRequest.playerName = name;
+					cRequest.listenPort = listenPort;
+					cRequest.uID = -1;
+
+					System.out.println(cRequest.hostName);
+
+					ObjectOutputStream toServer = new ObjectOutputStream(sendSocket.getOutputStream());
+
+					toServer.writeObject(cRequest);
+
+					Socket receiveSocket = listenSocket.accept();
+					ObjectInputStream fromServer = new ObjectInputStream(receiveSocket.getInputStream());
+
+					while( (cResponse = (PlayerPacket) fromServer.readObject()) != null) {
+
+						if (cResponse.type != PlayerPacket.PLAYER_REGISTER_REPLY)
+							continue;
+						else {
+							tempID = cResponse.uID;
+							break;
+						}
+					}
+
+					toServer.close();
+					fromServer.close();
+					receiveSocket.close();
+					listenSocket.close();
+					sendSocket.close();
+							
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.err.println("ERROR: Issue binding to server socket!");
+					System.exit(-1);
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+					System.exit(-1);
+				}
+
+				if(tempID == -1) {
+					System.err.println("ERROR: Issue identifying player with remote server!");
+					System.exit(-1);
+				}
+
+				uID = tempID;
+				System.out.println("Player " + name + " registered.");
+
                 // Create the GUIClient and connect it to the KeyListener queue
                 guiClient = new GUIClient(name);
                 maze.addClient(guiClient);
@@ -215,7 +280,6 @@ public class Mazewar extends JFrame {
                 overheadPanel.repaint();
                 this.requestFocusInWindow();
         }
-
         
         /**
          * Entry point for the game.  
@@ -224,6 +288,6 @@ public class Mazewar extends JFrame {
         public static void main(String args[]) {
 
                 /* Create the GUI */
-                new Mazewar();
+                new Mazewar(Integer.parseInt(args[0]), args[1], Integer.parseInt(args[2]));
         }
 }

@@ -9,9 +9,9 @@ public class MazeServer {
 		boolean listening = true;
 
 		try {
-			if (args.length == 2) {
+			if (args.length == 1) {
 				serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-				new MazeServerProcessor(Integer.parseInt(args[1])).start();
+				new MazeServerProcessor().start();
 			} else {
 				System.err.println("ERROR: Invalid number of arguments passed in!");
 				System.out.println("Usage: java MazeServer <port_num>");

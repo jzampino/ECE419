@@ -5,32 +5,38 @@ import java.util.Map;
 
 public class MazeServerProcessor extends Thread {
 
-  	private int socketPort = -1;
 	public static LinkedBlockingQueue<PlayerPacket> requestLog = new LinkedBlockingQueue<PlayerPacket>();
-
-	public MazeServerProcessor(int socket) {
-		super("MazeServerProcessor");
-		this.socketPort = socket;
-		System.out.println("Processor up and running...");
-	}
 
 	public void run() {
 		boolean queueProcessing = true;
 
-	  	while(queueProcessing) {
-			PlayerPacket toProcess = (PlayerPacket) requestLog.take();
-			
-			for (Map.Entry<Integer, String> player : MazeServerRequestHandler.playerList.entrySet()) {
-				String[] playerKey = player.getValue().split(".");
-				Socket socket = new Socket(playerKey[1], this.socketPort);
+		try {
+	  		while(queueProcessing) {
+				PlayerPacket toProcess = (PlayerPacket) requestLog.take();
 
-				ObjectOutputStream toClient = new ObjectOutputStream(socket.getOutputStream());
+				System.out.println("Processing packet");
+				
+				for (Map.Entry<Integer, PlayerInfo> player : MazeServerRequestHandler.playerList.entrySet()) {
+					PlayerInfo pInfo = player.getValue();
 
-				toClient.writeObject(toProcess);
+					System.out.println("Host: " + pInfo.hostName + " Port: " + pInfo.listenPort);
 
-				toClient.close();
-				socket.close();
+					Socket socket = new Socket(pInfo.hostName, pInfo.listenPort);
+
+					ObjectOutputStream toClient = new ObjectOutputStream(socket.getOutputStream());
+	
+					toClient.writeObject(toProcess);
+	
+					toClient.close();
+					socket.close();
+				}
 			}
+		} catch (IOException e) {
+			if(!queueProcessing)
+				e.printStackTrace();
+		} catch (InterruptedException e) {
+			if(!queueProcessing)
+				e.printStackTrace();
 		}
 	}
 }
