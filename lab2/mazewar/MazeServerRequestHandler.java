@@ -15,7 +15,6 @@ public class MazeServerRequestHandler extends Thread {
 	}
 
 	public void run() {
-		boolean gotQuit = false;
 
 		try {
 			ObjectInputStream fromPlayer = new ObjectInputStream(socket.getInputStream());
@@ -60,13 +59,10 @@ public class MazeServerRequestHandler extends Thread {
 			fromPlayer.close();
 			socket.close();
 		} catch (IOException e) {
-			if(!gotQuit)
 				e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			if(!gotQuit)
 				e.printStackTrace();
 		} catch (InterruptedException e) {
-			if(!gotQuit)
 				e.printStackTrace();
 		}
 	}

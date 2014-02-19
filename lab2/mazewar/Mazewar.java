@@ -160,12 +160,10 @@ public class Mazewar extends JFrame {
 					PlayerPacket cResponse;
 
 					cRequest.type = PlayerPacket.PLAYER_REGISTER;
-					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
+					cRequest.hostName = "localhost"; //java.net.InetAddress.getLocalHost().getHostName();
 					cRequest.playerName = name;
 					cRequest.listenPort = listenPort;
 					cRequest.uID = -1;
-
-					System.out.println(cRequest.hostName);
 
 					ObjectOutputStream toServer = new ObjectOutputStream(sendSocket.getOutputStream());
 
