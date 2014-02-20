@@ -7,7 +7,6 @@ public class ClientUpdateHandlerThread extends Thread {
 
 	private Socket socket = null;
 	private Maze maze = null;
-	private static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
 
 	public ClientUpdateHandlerThread(Socket socket, Maze maze) {
 		super("ClientUpdateHandler");
@@ -23,23 +22,61 @@ public class ClientUpdateHandlerThread extends Thread {
 
 			while ( (pPacket = (PlayerPacket) fromServer.readObject()) != null) {
 
-				if(pPacket.type == PlayerPacket.PLAYER_REGISTER_REPLY) {
-					PlayerInfo pInfo = new PlayerInfo();
+				if(pPacket.type == PlayerPacket.PLAYER_REGISTER_REPLY || pPacket.type == PlayerPacket.PLAYER_REGISTER_UPDATE) {
 
-					pInfo.hostName = pPacket.hostName;
-					pInfo.playerName = pPacket.playerName;
-					pInfo.uID = pPacket.uID;
+					System.out.println("Received Join from Player: " + pPacket.playerName);
 
-					playerList.put(pInfo.uID, pInfo);
+					Client newClient = new RemoteClient(pPacket.playerName);
 
-					System.out.println("Received Join from Player: " + pInfo.playerName);
+					ClientUpdateHandler.playerList.put(pPacket.uID, newClient);
 
-					maze.addClient(new RemoteClient(pInfo.playerName));
+					maze.addClient(newClient);
 
 					fromServer.close();
 					socket.close();
 
 					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_FORWARD) {
+					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
+
+					if(maze.moveClientForward(updateClient)) {
+                        updateClient.notifyMoveForward();
+                	}
+
+					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_BACKUP) {
+
+					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
+
+					if(maze.moveClientBackward(updateClient)) {
+                        updateClient.notifyMoveBackward();
+					}
+					break;
+                } else if (pPacket.type == PlayerPacket.PLAYER_LEFT) {
+					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
+
+                	updateClient.notifyTurnLeft();
+
+					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_RIGHT) {	
+					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
+
+                	updateClient.notifyTurnRight();
+
+					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_FIRE) {
+					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
+
+					if(maze.clientFire(updateClient)) {
+                        updateClient.notifyFire();
+					}
+
+					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_QUIT) {
+
+					System.out.println("Player quit..Ending game...");
+
+					Mazewar.quit();
 				}
 			}
 		} catch (IOException e) {

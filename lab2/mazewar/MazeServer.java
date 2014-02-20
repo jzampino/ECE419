@@ -8,6 +8,7 @@ public class MazeServer {
 	public static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
 	public static LinkedBlockingQueue<PlayerPacket> requestLog = new LinkedBlockingQueue<PlayerPacket>();
 	public static int pCount = 0;
+	public static int numPlayers = 0;
 
 	public static void main(String[] args) throws IOException {
 
@@ -15,8 +16,9 @@ public class MazeServer {
 		boolean listening = true;
 
 		try {
-			if (args.length == 1) {
+			if (args.length == 2) {
 				serverSocket = new ServerSocket(Integer.parseInt(args[0]));
+				numPlayers = Integer.parseInt(args[1]);
 				new MazeServerProcessor().start();
 			} else {
 				System.err.println("ERROR: Invalid number of arguments passed in!");

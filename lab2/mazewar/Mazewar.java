@@ -29,6 +29,8 @@ import javax.swing.BorderFactory;
 import java.io.Serializable;
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.*;
+import java.util.*;
 
 /**
  * The entry point and glue code for the game.  It also contains some helpful
@@ -42,7 +44,9 @@ public class Mazewar extends JFrame {
 		/**
 		 * Unique ID for this player in the system
 		 */
-		public final int uID;
+		public static int uID;
+		public static int serverPort;
+		public static String serverName;
 
         /**
          * The default width of the {@link Maze}.
@@ -119,8 +123,26 @@ public class Mazewar extends JFrame {
                 // (inform other implementations on the network that you have 
                 //  left, etc.)
                 
+			try{
+				PlayerPacket byePacket = new PlayerPacket();
+
+				byePacket.type = PlayerPacket.PLAYER_QUIT;
+				byePacket.uID = uID;
+
+				Socket socket = new Socket(serverName, serverPort);
+				ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+				toServer.writeObject(byePacket);
+
+				toServer.close();
+				socket.close();
 
                 System.exit(0);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+
         }
        
         /** 
@@ -130,6 +152,10 @@ public class Mazewar extends JFrame {
                 super("ECE419 Mazewar");
                 consolePrintLn("ECE419 Mazewar started!");
                 
+				// Set up globals for server communication
+				this.serverName = serverName;
+				this.serverPort = serverPort;
+
                 // Create the maze
                 maze = new MazeImpl(new Point(mazeWidth, mazeHeight), mazeSeed);
                 assert(maze != null);
@@ -150,6 +176,7 @@ public class Mazewar extends JFrame {
                 // here.
 
 				int tempID = -1;
+				ConcurrentSkipListMap<Integer, Client> existingPlayers = new ConcurrentSkipListMap<Integer, Client>();
 				
 				try {
 
@@ -160,7 +187,7 @@ public class Mazewar extends JFrame {
 					PlayerPacket cResponse;
 
 					cRequest.type = PlayerPacket.PLAYER_REGISTER;
-					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
+					cRequest.hostName = "localhost";//java.net.InetAddress.getLocalHost().getHostName();
 					cRequest.playerName = name;
 					cRequest.listenPort = listenPort;
 					cRequest.uID = -1;
@@ -175,7 +202,10 @@ public class Mazewar extends JFrame {
 					while( (cResponse = (PlayerPacket) fromServer.readObject()) != null) {
 
 						if (cResponse.type == PlayerPacket.PLAYER_REGISTER_UPDATE) {
-							maze.addClient(new RemoteClient(cResponse.playerName));
+							Client newClient = new RemoteClient(cResponse.playerName);
+							maze.addClient(newClient);
+
+							existingPlayers.put(cResponse.uID, newClient);
 
 							continue;
 						} else if (cResponse.type == PlayerPacket.PLAYER_REGISTER_REPLY) {
@@ -194,7 +224,6 @@ public class Mazewar extends JFrame {
 					sendSocket.close();
 
 					new ClientUpdateHandler(maze, listenPort).start();
-
 							
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -211,12 +240,19 @@ public class Mazewar extends JFrame {
 				}
 
 				uID = tempID;
+			
 				System.out.println("Player " + name + " registered.");
 
                 // Create the GUIClient and connect it to the KeyListener queue
                 guiClient = new GUIClient(name);
                 maze.addClient(guiClient);
                 this.addKeyListener(guiClient);
+
+				ClientUpdateHandler.playerList.put(uID, guiClient);
+
+				for (Map.Entry<Integer, Client> ePlayer : existingPlayers.entrySet()) {
+					ClientUpdateHandler.playerList.put(ePlayer.getKey(), ePlayer.getValue());
+				}
                 
                 // Use braces to force constructors not to be called at the beginning of the
                 // constructor.

@@ -20,6 +20,8 @@ USA.
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.io.*;
+import java.net.*;
 
 /**
  * An abstract class for clients in a maze. 
@@ -129,12 +131,24 @@ public abstract class Client {
         protected boolean forward() {
                 assert(maze != null);
                 
-                if(maze.moveClientForward(this)) {
-                        notifyMoveForward();
-                        return true;
-                } else {
-                        return false;
-                }
+				try {
+					Socket socket = new Socket(Mazewar.serverName, Mazewar.serverPort);
+					PlayerPacket pForward = new PlayerPacket();
+
+					pForward.type = PlayerPacket.PLAYER_FORWARD;
+					pForward.uID = Mazewar.uID;
+
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+					toServer.writeObject(pForward);
+					toServer.close();
+					socket.close();
+
+					return true;
+				} catch (IOException e) {
+					System.err.println("ERROR: Cannot connect to server!");
+					return false;
+				}
         }
         
         /**
@@ -144,26 +158,66 @@ public abstract class Client {
         protected boolean backup() {
                 assert(maze != null);
 
-                if(maze.moveClientBackward(this)) {
-                        notifyMoveBackward();
-                        return true;
-                } else {
-                        return false;
-                }
+				try {
+					Socket socket = new Socket(Mazewar.serverName, Mazewar.serverPort);
+					PlayerPacket pBackup = new PlayerPacket();
+
+					pBackup.type = PlayerPacket.PLAYER_BACKUP;
+					pBackup.uID = Mazewar.uID;
+
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+					toServer.writeObject(pBackup);
+					toServer.close();
+					socket.close();
+
+					return true;
+				} catch (IOException e) {
+					System.err.println("ERROR: Cannot connect to server!");
+					return false;
+				}
         }
         
         /**
          * Turn the client ninety degrees counter-clockwise.
          */
         protected void turnLeft() {
-                notifyTurnLeft();
+				try {
+					Socket socket = new Socket(Mazewar.serverName, Mazewar.serverPort);
+					PlayerPacket pLeft = new PlayerPacket();
+
+					pLeft.type = PlayerPacket.PLAYER_LEFT;
+					pLeft.uID = Mazewar.uID;
+
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+					toServer.writeObject(pLeft);
+					toServer.close();
+					socket.close();
+				} catch (IOException e) {
+					System.err.println("ERROR: Cannot connect to server!");
+				}
         }
         
         /**
          * Turn the client ninety degrees clockwise.
          */
         protected void turnRight() {
-                notifyTurnRight();
+                try {
+					Socket socket = new Socket(Mazewar.serverName, Mazewar.serverPort);
+					PlayerPacket pRight = new PlayerPacket();
+
+					pRight.type = PlayerPacket.PLAYER_RIGHT;
+					pRight.uID = Mazewar.uID;
+
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+					toServer.writeObject(pRight);
+					toServer.close();
+					socket.close();
+				} catch (IOException e) {
+					System.err.println("ERROR: Cannot connect to server!");
+				}
         }
         
         /**
@@ -173,47 +227,62 @@ public abstract class Client {
         protected boolean fire() {
                 assert(maze != null);
 
-                if(maze.clientFire(this)) {
-                        notifyFire();
-                        return true;
-                } else {
-                        return false;
-                }
+                try {
+					Socket socket = new Socket(Mazewar.serverName, Mazewar.serverPort);
+					PlayerPacket pFire = new PlayerPacket();
+
+					pFire.type = PlayerPacket.PLAYER_FIRE;
+					pFire.uID = Mazewar.uID;
+
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+
+					toServer.writeObject(pFire);
+					toServer.close();
+					socket.close();
+
+					return true;
+				} catch (IOException e) {
+					System.err.println("ERROR: Cannot connect to server!");
+					
+					return false;
+				}
+				
+				
         }
         
         
         /** 
          * Notify listeners that the client moved forward.
          */
-        private void notifyMoveForward() {
+        public void notifyMoveForward() {
                 notifyListeners(ClientEvent.moveForward);
         }
         
         /**
          * Notify listeners that the client moved backward.
          */
-        private void notifyMoveBackward() {
+        public void notifyMoveBackward() {
                 notifyListeners(ClientEvent.moveBackward);
         }
         
         /**
          * Notify listeners that the client turned right.
          */
-        private void notifyTurnRight() {
+        public void notifyTurnRight() {
                 notifyListeners(ClientEvent.turnRight);
         }
         
         /**
          * Notify listeners that the client turned left.
          */
-        private void notifyTurnLeft() {
+        public void notifyTurnLeft() {
                 notifyListeners(ClientEvent.turnLeft);       
         }
         
         /**
          * Notify listeners that the client fired.
          */
-        private void notifyFire() {
+        public void notifyFire() {
                 notifyListeners(ClientEvent.fire);       
         }
         

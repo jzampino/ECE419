@@ -1,10 +1,13 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class ClientUpdateHandler extends Thread {
 
 	Maze maze = null;
 	int listenPort;
+	public static ConcurrentSkipListMap<Integer, Client> playerList = new ConcurrentSkipListMap<Integer, Client>();
 
 	public ClientUpdateHandler (Maze maze, int listenPort) {
 		super("ClientUpdateHandler");

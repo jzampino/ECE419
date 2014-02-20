@@ -49,6 +49,16 @@ public class MazeServerRequestHandler extends Thread {
 					MazeServer.requestLog.put(cPacket);
 
 					break;
+				} else if (pPacket.type == PlayerPacket.PLAYER_QUIT) { 
+					MazeServer.playerList.remove(pPacket.uID);
+
+					MazeServer.requestLog.put(pPacket);
+
+					break;
+				} else {
+					MazeServer.requestLog.put(pPacket);
+
+					break;
 				}
 			}
 

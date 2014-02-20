@@ -19,6 +19,7 @@ USA.
 
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
+import java.io.*;
 
 /**
  * An implementation of {@link LocalClient} that is controlled by the keyboard
@@ -46,7 +47,7 @@ public class GUIClient extends LocalClient implements KeyListener {
                         Mazewar.quit();
                 // Up-arrow moves forward.
                 } else if(e.getKeyCode() == KeyEvent.VK_UP) {
-                        forward();
+						forward();
                 // Down-arrow moves backward.
                 } else if(e.getKeyCode() == KeyEvent.VK_DOWN) {
                         backup();
