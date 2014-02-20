@@ -1,7 +1,13 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class MazeServer {
+
+	public static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
+	public static LinkedBlockingQueue<PlayerPacket> requestLog = new LinkedBlockingQueue<PlayerPacket>();
+	public static int pCount = 0;
 
 	public static void main(String[] args) throws IOException {
 

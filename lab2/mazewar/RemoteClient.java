@@ -25,15 +25,34 @@ USA.
 
 public class RemoteClient extends Client {
         
+
+		boolean active = false;
+
         /**
          * Create a remotely controlled {@link Client}.
          * @param name Name of this {@link RemoteClient}.
          */
         public RemoteClient(String name) {
                 super(name);
+				assert(name != null);
         }
 
         /**
          * May want to fill in code here.
          */ 
+
+		public synchronized void registerMaze(Maze maze) {
+			assert(maze != null);
+			super.registerMaze(maze);
+
+			active = true;
+		}
+
+		public synchronized void unregisterMaze() {
+			active = false;
+
+			super.unregisterMaze();
+		}
+
+		
 }

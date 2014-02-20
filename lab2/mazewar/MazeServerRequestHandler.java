@@ -6,8 +6,6 @@ import java.util.concurrent.*;
 public class MazeServerRequestHandler extends Thread {
 	
 	private Socket socket = null;
-	private int pCount = 0;
-	public static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
 
 	public MazeServerRequestHandler(Socket socket) {
 		super("MazeServerRequestHandler");
@@ -20,8 +18,6 @@ public class MazeServerRequestHandler extends Thread {
 			ObjectInputStream fromPlayer = new ObjectInputStream(socket.getInputStream());
 			PlayerPacket pPacket;
 
-			System.out.println("Waiting for players...");
-
 			while( (pPacket = (PlayerPacket) fromPlayer.readObject()) != null) {
 
 				PlayerPacket cPacket = new PlayerPacket();
@@ -29,10 +25,10 @@ public class MazeServerRequestHandler extends Thread {
 
 				if(pPacket.type == PlayerPacket.PLAYER_REGISTER) {
 					if(pPacket.uID == -1) {
-						pCount++;
+						MazeServer.pCount++;
 						pInfo.hostName = pPacket.hostName;
 						pInfo.playerName = pPacket.playerName;
-						pInfo.uID = pCount;
+						pInfo.uID = MazeServer.pCount;
 						pInfo.listenPort = pPacket.listenPort;
 					}
 					else {
@@ -40,17 +36,17 @@ public class MazeServerRequestHandler extends Thread {
 						System.exit(-1);
 					}
 						
-					playerList.put(pCount, pInfo);
+					MazeServer.playerList.put(MazeServer.pCount, pInfo);
 
 					cPacket = pPacket;
 					cPacket.type = PlayerPacket.PLAYER_REGISTER_REPLY;
-					cPacket.uID = pCount;
+					cPacket.uID = MazeServer.pCount;
 
 					System.out.println("Registered user: " + pPacket.playerName + ", from: " + pPacket.hostName);
 
 					// Add request to FIFO, should cause handler thread to wake up
 
-					MazeServerProcessor.requestLog.put(cPacket);
+					MazeServer.requestLog.put(cPacket);
 
 					break;
 				}

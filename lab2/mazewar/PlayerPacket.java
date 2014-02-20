@@ -4,6 +4,7 @@ public class PlayerPacket implements Serializable {
 
 	public static final int PLAYER_QUIT = 0;
 	public static final int PLAYER_REGISTER_REPLY = 200;
+	public static final int PLAYER_REGISTER_UPDATE = 300;
 	public static final int PLAYER_REGISTER = 100;
 	public static final int PLAYER_FORWARD = 101;
 	public static final int PLAYER_BACKUP = 102;
@@ -16,5 +17,4 @@ public class PlayerPacket implements Serializable {
 	public int uID;
 	public int type;
 	public int listenPort;
-
 }

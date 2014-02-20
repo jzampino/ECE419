@@ -160,7 +160,7 @@ public class Mazewar extends JFrame {
 					PlayerPacket cResponse;
 
 					cRequest.type = PlayerPacket.PLAYER_REGISTER;
-					cRequest.hostName = "localhost"; //java.net.InetAddress.getLocalHost().getHostName();
+					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
 					cRequest.playerName = name;
 					cRequest.listenPort = listenPort;
 					cRequest.uID = -1;
@@ -174,11 +174,16 @@ public class Mazewar extends JFrame {
 
 					while( (cResponse = (PlayerPacket) fromServer.readObject()) != null) {
 
-						if (cResponse.type != PlayerPacket.PLAYER_REGISTER_REPLY)
+						if (cResponse.type == PlayerPacket.PLAYER_REGISTER_UPDATE) {
+							maze.addClient(new RemoteClient(cResponse.playerName));
+
 							continue;
-						else {
+						} else if (cResponse.type == PlayerPacket.PLAYER_REGISTER_REPLY) {
 							tempID = cResponse.uID;
+
 							break;
+						} else {
+							continue;
 						}
 					}
 
@@ -187,6 +192,9 @@ public class Mazewar extends JFrame {
 					receiveSocket.close();
 					listenSocket.close();
 					sendSocket.close();
+
+					new ClientUpdateHandler(maze, listenPort).start();
+
 							
 				} catch (IOException e) {
 					e.printStackTrace();
