@@ -76,7 +76,11 @@ public class ClientUpdateHandlerThread extends Thread {
 
 					System.out.println("Player quit..Ending game...");
 
-					Mazewar.quit();
+					if(pPacket.uID == -1) {
+						Mazewar.quit(1);
+					} else {
+						Mazewar.quit(0);
+					}
 				}
 			}
 		} catch (IOException e) {

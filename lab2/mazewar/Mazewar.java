@@ -118,31 +118,33 @@ public class Mazewar extends JFrame {
         /**
          * Static method for performing cleanup before exiting the game.
          */
-        public static void quit() {
+        public static void quit(int mode) {
                 // Put any network clean-up code you might have here.
                 // (inform other implementations on the network that you have 
                 //  left, etc.)
-                
-			try{
-				PlayerPacket byePacket = new PlayerPacket();
+            if (mode == 0) { 
+				try {
+					PlayerPacket byePacket = new PlayerPacket();
 
-				byePacket.type = PlayerPacket.PLAYER_QUIT;
-				byePacket.uID = uID;
+					byePacket.type = PlayerPacket.PLAYER_QUIT;
+					byePacket.uID = uID;
 
-				Socket socket = new Socket(serverName, serverPort);
-				ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
+					Socket socket = new Socket(serverName, serverPort);
+					ObjectOutputStream toServer = new ObjectOutputStream(socket.getOutputStream());
 
-				toServer.writeObject(byePacket);
+					toServer.writeObject(byePacket);
 
-				toServer.close();
-				socket.close();
+					toServer.close();
+					socket.close();
 
-                System.exit(0);
-			} catch (IOException e) {
-				e.printStackTrace();
+                	System.exit(0);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(0);
+				}
+			} else if (mode == 1) {
 				System.exit(0);
 			}
-
         }
        
         /** 
@@ -169,7 +171,7 @@ public class Mazewar extends JFrame {
                 // Throw up a dialog to get the GUIClient name.
                 String name = JOptionPane.showInputDialog("Enter your name");
                 if((name == null) || (name.length() == 0)) {
-                  Mazewar.quit();
+                  Mazewar.quit(1);
                 }
                 
                 // You may want to put your network initialization code somewhere in
@@ -187,7 +189,7 @@ public class Mazewar extends JFrame {
 					PlayerPacket cResponse;
 
 					cRequest.type = PlayerPacket.PLAYER_REGISTER;
-					cRequest.hostName = "localhost";//java.net.InetAddress.getLocalHost().getHostName();
+					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
 					cRequest.playerName = name;
 					cRequest.listenPort = listenPort;
 					cRequest.uID = -1;

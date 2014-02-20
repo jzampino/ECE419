@@ -31,10 +31,60 @@ public class MazeServer {
 			System.exit(-1);
 		}
 
+		Runtime runtime = Runtime.getRuntime();
+		Thread serverShutdown = new Thread(new MazeServerShutdown(serverSocket));
+		runtime.addShutdownHook(serverShutdown);
+
 		while (listening) {
-			new MazeServerRequestHandler(serverSocket.accept()).start();
+			try {
+				new MazeServerRequestHandler(serverSocket.accept()).start();
+			} catch (SocketException e) {
+			}
 		}
 
-		serverSocket.close();
+		try {
+			serverSocket.close();
+		} catch (SocketException e) {
+			System.exit(0);
+		}
 	}
 }
+
+class MazeServerShutdown implements Runnable {
+
+	private ServerSocket serverSocket;
+
+	public MazeServerShutdown (ServerSocket serverSocket) {
+		this.serverSocket = serverSocket;
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Shutting down server, sending disconnect to all players");
+
+		PlayerInfo pInfo = new PlayerInfo();
+		PlayerPacket pAction = new PlayerPacket();
+
+		pAction.type = PlayerPacket.PLAYER_QUIT;
+		pAction.uID = -1;
+
+		try {
+			for (Map.Entry<Integer, PlayerInfo> player : MazeServer.playerList.entrySet()) {
+				pInfo = player.getValue();
+
+				Socket socket = new Socket(pInfo.hostName, pInfo.listenPort);
+
+				ObjectOutputStream toClient = new ObjectOutputStream(socket.getOutputStream());
+
+				toClient.writeObject(pAction);
+
+				toClient.close();
+				socket.close();
+			}
+
+			serverSocket.close();
+		} catch (IOException e) {
+		}
+	}
+}
+
