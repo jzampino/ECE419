@@ -14,6 +14,8 @@ public class ClientUpdateHandlerThread extends Thread {
 		this.maze = maze;
 	}
 
+	// We won't constantly listen. Instead we service the request we get and let
+	// the thread exit.
 	public void run() {
 		try {
 			ObjectInputStream fromServer = new ObjectInputStream(socket.getInputStream());
@@ -22,6 +24,8 @@ public class ClientUpdateHandlerThread extends Thread {
 
 			while ( (pPacket = (PlayerPacket) fromServer.readObject()) != null) {
 
+				// New player is joining the game after use, add them to our playerList using their uID
+				// as key and add them to the maze. Remote clients are purple.
 				if(pPacket.type == PlayerPacket.PLAYER_REGISTER_REPLY || pPacket.type == PlayerPacket.PLAYER_REGISTER_UPDATE) {
 
 					System.out.println("Received Join from Player: " + pPacket.playerName);
@@ -39,6 +43,9 @@ public class ClientUpdateHandlerThread extends Thread {
 				} else if (pPacket.type == PlayerPacket.PLAYER_FORWARD) {
 					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
 
+					// Process a request for ourselves or a remote client. Doesn't matter
+					// these methods were just removed from Client.java and placed here. Functions
+					// called by GUIClient were changed to facilitate this.
 					if(maze.moveClientForward(updateClient)) {
                         updateClient.notifyMoveForward();
                 	}
@@ -67,6 +74,9 @@ public class ClientUpdateHandlerThread extends Thread {
 				} else if (pPacket.type == PlayerPacket.PLAYER_FIRE) {
 					Client updateClient = ClientUpdateHandler.playerList.get(pPacket.uID);
 
+					// Not going to handle this in a complex way, as it stands this will simply
+					// compute where the projectile will be based on our own counter. Should
+					// be sufficient but will need to fix this for Lab 3 (maybe)
 					if(maze.clientFire(updateClient)) {
                         updateClient.notifyFire();
 					}

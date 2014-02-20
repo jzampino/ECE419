@@ -30,7 +30,7 @@ public class Direction {
         /* Internals ******************************************************/
         
         /**
-         * Create a random number generator to produce random directions.
+         * Use a default random number seed such that all clients spawn the same way across machines
          */
         private static Random randomGen = new Random(42);
         

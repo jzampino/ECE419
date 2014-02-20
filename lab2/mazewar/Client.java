@@ -125,7 +125,7 @@ public abstract class Client {
         }
 
         /**
-         * Move the client forward.
+         * Ask the server if we can move forward
          * @return <code>true</code> if move was successful, otherwise <code>false</code>.
          */
         protected boolean forward() {
@@ -152,7 +152,7 @@ public abstract class Client {
         }
         
         /**
-         * Move the client backward.
+         * Ask the server if we can move backward
          * @return <code>true</code> if move was successful, otherwise <code>false</code>.
          */
         protected boolean backup() {
@@ -179,7 +179,7 @@ public abstract class Client {
         }
         
         /**
-         * Turn the client ninety degrees counter-clockwise.
+         * Ask the server if we can turn 90-degrees clockwise
          */
         protected void turnLeft() {
 				try {
@@ -200,7 +200,7 @@ public abstract class Client {
         }
         
         /**
-         * Turn the client ninety degrees clockwise.
+         * Ask the server if we can turn 90-degrees counter-clockwise
          */
         protected void turnRight() {
                 try {
@@ -221,7 +221,7 @@ public abstract class Client {
         }
         
         /**
-         * Fire a projectile.
+         * Ask the server if we can shoot a projectile
          * @return <code>true</code> if a projectile was successfully launched, otherwise <code>false</code>.
          */
         protected boolean fire() {

@@ -122,6 +122,7 @@ public class Mazewar extends JFrame {
                 // Put any network clean-up code you might have here.
                 // (inform other implementations on the network that you have 
                 //  left, etc.)
+			// Mode 0 if a client is disconnection, Mode 1 if the server was killed
             if (mode == 0) { 
 				try {
 					PlayerPacket byePacket = new PlayerPacket();
@@ -177,7 +178,7 @@ public class Mazewar extends JFrame {
                 // You may want to put your network initialization code somewhere in
                 // here.
 
-				int tempID = -1;
+				int tempID = -1; // This isn't necessary anymore, but I don't want to change it
 				ConcurrentSkipListMap<Integer, Client> existingPlayers = new ConcurrentSkipListMap<Integer, Client>();
 				
 				try {
@@ -188,6 +189,9 @@ public class Mazewar extends JFrame {
 					PlayerPacket cRequest = new PlayerPacket();
 					PlayerPacket cResponse;
 
+					// Set up the initial registration packet for the server,
+					// we will block on this until we recevie a confirmation
+					// reply from the server
 					cRequest.type = PlayerPacket.PLAYER_REGISTER;
 					cRequest.hostName = java.net.InetAddress.getLocalHost().getHostName();
 					cRequest.playerName = name;
@@ -203,15 +207,22 @@ public class Mazewar extends JFrame {
 
 					while( (cResponse = (PlayerPacket) fromServer.readObject()) != null) {
 
+						// This particular type of packet is only sent to players
+						// who are not the very first player. This ensures that the
+						// random number generator places everyone in the same positions
+						// on the map. We basically draw all players in the order
+						// that they joined based on a unique ID assigned by the server
 						if (cResponse.type == PlayerPacket.PLAYER_REGISTER_UPDATE) {
 							Client newClient = new RemoteClient(cResponse.playerName);
 							maze.addClient(newClient);
 
+							// Add the client to our playerList so we can keep track
+							// of them when we update the map in the future
 							existingPlayers.put(cResponse.uID, newClient);
 
 							continue;
 						} else if (cResponse.type == PlayerPacket.PLAYER_REGISTER_REPLY) {
-							tempID = cResponse.uID;
+							tempID = cResponse.uID; // Save the uID
 
 							break;
 						} else {
@@ -225,6 +236,7 @@ public class Mazewar extends JFrame {
 					listenSocket.close();
 					sendSocket.close();
 
+					// Spawn a thread to handle broadcasted updates from the server
 					new ClientUpdateHandler(maze, listenPort).start();
 							
 				} catch (IOException e) {
@@ -252,6 +264,8 @@ public class Mazewar extends JFrame {
 
 				ClientUpdateHandler.playerList.put(uID, guiClient);
 
+				// Add all existing users who joined before us to the playerList.
+				// This is used by the ClientUpdateHandlerThread
 				for (Map.Entry<Integer, Client> ePlayer : existingPlayers.entrySet()) {
 					ClientUpdateHandler.playerList.put(ePlayer.getKey(), ePlayer.getValue());
 				}

@@ -22,6 +22,8 @@ public class ClientUpdateHandler extends Thread {
 
 			boolean listening = true;
 
+			// Pretty straight forward, spawn a thread each time we receive an
+			// update from the server, make sure we pass in the maze
 			while(listening) {
 				new ClientUpdateHandlerThread(socket.accept(), maze).start();
 			}

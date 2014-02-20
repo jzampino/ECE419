@@ -23,6 +23,8 @@ public class MazeServerRequestHandler extends Thread {
 				PlayerPacket cPacket = new PlayerPacket();
 				PlayerInfo pInfo = new PlayerInfo();
 
+				// Only need to do fancy things for a registration request. Simply set up the PlayerInfo object
+				// to add to the PlayerList and we are good to go
 				if(pPacket.type == PlayerPacket.PLAYER_REGISTER) {
 					if(pPacket.uID == -1) {
 						MazeServer.pCount++;
@@ -36,6 +38,7 @@ public class MazeServerRequestHandler extends Thread {
 						System.exit(-1);
 					}
 						
+					// Add player to list
 					MazeServer.playerList.put(MazeServer.pCount, pInfo);
 
 					cPacket = pPacket;
@@ -45,7 +48,6 @@ public class MazeServerRequestHandler extends Thread {
 					System.out.println("Registered user: " + pPacket.playerName + ", from: " + pPacket.hostName);
 
 					// Add request to FIFO, should cause handler thread to wake up
-
 					MazeServer.requestLog.put(cPacket);
 
 					break;

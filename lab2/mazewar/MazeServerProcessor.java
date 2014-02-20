@@ -10,6 +10,8 @@ public class MazeServerProcessor extends Thread {
 
 		try {
 	  		while(queueProcessing) {
+				// This thread basically peeks the head of the FIFO and checks to see if
+				// there are any pending requests, if not, it will keep looping.
 				PlayerPacket toProcess = (PlayerPacket) MazeServer.requestLog.peek();
 				
 				if(toProcess == null)
@@ -18,6 +20,7 @@ public class MazeServerProcessor extends Thread {
 				if(toProcess.type == PlayerPacket.PLAYER_REGISTER_REPLY) {
 					toProcess = (PlayerPacket) MazeServer.requestLog.take();
 
+					// Small check to see if anyone else is already registered
 					if (MazeServer.playerList.size() > 1) {
 						updateNewPlayer(toProcess);
 						
@@ -27,6 +30,7 @@ public class MazeServerProcessor extends Thread {
 					}
 
 				} else {
+					// Check to see if the playerList has numPlayers in it
 					if(MazeServer.playerList.size() == MazeServer.numPlayers || toProcess.type == PlayerPacket.PLAYER_QUIT) {
 						toProcess = (PlayerPacket) MazeServer.requestLog.take();
 						
@@ -50,6 +54,7 @@ public class MazeServerProcessor extends Thread {
 		}
 	}
 
+	// Either broadcast to everyone (including myself, mode 0), or to everyone except myself (mode 1)
 	private void broadCastAction(PlayerPacket pAction, int mode) throws IOException {
 		PlayerInfo pInfo = null;
 
@@ -85,6 +90,8 @@ public class MazeServerProcessor extends Thread {
 		}
 	}
 
+	// Send update packets to the new player so they have an up-to-date map and place
+	// themselves in the correct spot
 	private void updateNewPlayer(PlayerPacket pAction) throws IOException {
 		PlayerInfo pInfo = null;
 		Socket newPlayer = null;

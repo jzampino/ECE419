@@ -5,9 +5,14 @@ import java.util.concurrent.*;
 
 public class MazeServer {
 
+	// This will keep track of all players in the game
 	public static ConcurrentSkipListMap<Integer, PlayerInfo> playerList = new ConcurrentSkipListMap<Integer, PlayerInfo>();
+	// This is a FIFO of all requests, we are serializing everything once we get it
 	public static LinkedBlockingQueue<PlayerPacket> requestLog = new LinkedBlockingQueue<PlayerPacket>();
+	// Unique player ID
 	public static int pCount = 0;
+	// Number of players required for a game. If the playerList is smaller, we have to wait until it is at least
+	// numPlayers long
 	public static int numPlayers = 0;
 
 	public static void main(String[] args) throws IOException {
@@ -22,7 +27,7 @@ public class MazeServer {
 				new MazeServerProcessor().start();
 			} else {
 				System.err.println("ERROR: Invalid number of arguments passed in!");
-				System.out.println("Usage: java MazeServer <port_num>");
+				System.out.println("Usage: java MazeServer <port_num> <number_of_players>");
 				System.exit(-1);
 			}
 		}
@@ -36,6 +41,7 @@ public class MazeServer {
 		runtime.addShutdownHook(serverShutdown);
 
 		while (listening) {
+			// The above is straightforward, just spawn a thread to add items to the FIFO
 			try {
 				new MazeServerRequestHandler(serverSocket.accept()).start();
 			} catch (SocketException e) {
